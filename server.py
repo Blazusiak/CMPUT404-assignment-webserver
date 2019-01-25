@@ -110,7 +110,11 @@ class MyWebServer(socketserver.BaseRequestHandler):
                     "</body></html>\r\n"
             return contents
         elif status_code == " 405 Method Not Allowed\r\n":
-            contents = ""
+            contents = "<html> <head> \r\n" + \
+                    "<title>405 Method Not Allowed</title> \r\n" + \
+                    "</head><body> \r\n" + \
+                    "<h1>405 Method Not Allowed</h1>\r\n" + \
+                    "</body></html>\r\n"
             return
             
     def send_request(self, proto, status_code, mime_type, content):
