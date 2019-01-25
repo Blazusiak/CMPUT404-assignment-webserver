@@ -27,12 +27,95 @@ import socketserver
 # try: curl -v -X GET http://127.0.0.1:8080/
 
 
+# Things I have imported
+import os
+from pathlib import Path
+
+# Resources I have used
+# https://stackoverflow.com/questions/82831/how-do-i-check-whether-a-file-exists-without-exceptions
+# https://www.systutorials.com/241539/how-to-get-the-file-extension-from-a-filename-in-python/
+# https://www.tutorialspoint.com/http/http_responses.htm
 class MyWebServer(socketserver.BaseRequestHandler):
     
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        print ("Got a request of: %s\n" % self.data)
-        self.request.sendall(bytearray("OK",'utf-8'))
+        self.string_data = self.get_string_data()
+
+        self.method = self.string_data[0][0]
+        self.file = self.string_data[0][1]
+        self.proto = self.string_data[0][2]
+
+        self.check_method()
+        self.check_file()
+
+    def get_string_data(self):
+        
+        string_list = []
+        string = self.data.decode().split("\r\n")
+        
+        for element in string:
+            string_list.append(element.split(" "))
+
+        return string_list 
+
+    def check_method(self):
+        if self.method == "GET":
+            print("method", self.method)
+        else:
+            # Send Response function
+            status_code = " 405 Method Not Allowed\r\n"
+            self.send_request(self.proto, status_code, self.get_mime_type(), self.get_content(status_code))
+
+    def check_file(self):
+        print("This is the file\n", self.file)
+        path = os.path.abspath(os.getcwd() + "/www" + self.file)
+
+        if self.file[-1] == "/":
+            path += "/index.html"
+
+        print("this is another", path)
+
+        if Path(path).exists() and "www" in path:
+            if Path(path).is_file():
+                content = open(path).read()
+                status_code = " 200 OK\r\n"
+                self.send_request(self.proto, status_code, self.get_mime_type(), content)
+            else:
+                status_code = " 301 Moved Permanently"
+                self.send_request(self.proto, status_code, self.get_mime_type(), self.get_content(status_code))
+        
+        else:
+            status_code = " 404 Error Not Found\r\n"
+            self.send_request(self.proto, status_code, self.get_mime_type(), self.get_content(status_code))
+
+    def get_mime_type(self):
+        _, ext = os.path.splitext(self.file)
+
+        if ext == ".css":
+            return "Content-Type: text/css\r\n"
+        elif ext == ".html":
+            return "Content-Type: text/html\r\n"
+        else:
+            return "Content-Type: text/html\r\n"
+
+    def get_content(self, status_code):
+        if status_code == " 301 Moved Permanently":
+            contents = "hello"
+            return contents
+        elif status_code == " 404 Error Not Found\r\n":
+            contents = "<html> <head> \r\n" + \
+                    "<title>404 Not Found</title> \r\n" + \
+                    "</head><body> \r\n" + \
+                    "<h1>404 Not Found</h1>\r\n" + \
+                    "</body></html>\r\n"
+            return contents
+        elif status_code == " 405 Method Not Allowed\r\n":
+            contents = ""
+            return
+            
+    def send_request(self, proto, status_code, mime_type, content):
+        response = proto + status_code + mime_type + "\r\n" + content
+        self.request.sendall(response.encode())
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
