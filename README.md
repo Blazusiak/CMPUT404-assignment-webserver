@@ -21,9 +21,9 @@ server.py contains contributions from:
 
 Collaborators
 
-* jwidney
-* fc1
-* jamaledd
+* Justin Widney - Discussed html and how to communicate with the client
+* Fangting Chen - Discussed 301 errors
+* Mohammad Jamaleddine - Discussed parsing received data
 
 But the server.py example is derived from the python documentation
 examples thus some of the code is Copyright © 2001-2013 Python

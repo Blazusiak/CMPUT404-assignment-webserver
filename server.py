@@ -35,6 +35,8 @@ from pathlib import Path
 # https://stackoverflow.com/questions/82831/how-do-i-check-whether-a-file-exists-without-exceptions
 # https://www.systutorials.com/241539/how-to-get-the-file-extension-from-a-filename-in-python/
 # https://www.tutorialspoint.com/http/http_responses.htm
+
+
 class MyWebServer(socketserver.BaseRequestHandler):
     
     def handle(self):
@@ -48,6 +50,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
         self.check_method()
         self.check_file()
 
+    # Parse client information and store it appropriately into a list
     def get_string_data(self):
         
         string_list = []
@@ -58,36 +61,33 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
         return string_list 
 
+    # Verify that we are only receiving a GET method
     def check_method(self):
-        if self.method == "GET":
-            print("method", self.method)
-        else:
-            # Send Response function
+        if self.method != "GET":
             status_code = " 405 Method Not Allowed\r\n"
-            self.send_request(self.proto, status_code, self.get_mime_type(), self.get_content(status_code))
+            self.send_request(status_code, self.get_mime_type(), self.get_content(status_code))
 
+    # Check if file exists, is a file and whether or not it is in the correct directory
     def check_file(self):
-        print("This is the file\n", self.file)
         path = os.path.abspath(os.getcwd() + "/www" + self.file)
 
         if self.file[-1] == "/":
             path += "/index.html"
 
-        print("this is another", path)
-
         if Path(path).exists() and "www" in path:
             if Path(path).is_file():
                 content = open(path).read()
                 status_code = " 200 OK\r\n"
-                self.send_request(self.proto, status_code, self.get_mime_type(), content)
+                self.send_request(status_code, self.get_mime_type(), content)
             else:
                 status_code = " 301 Moved Permanently"
-                self.send_request(self.proto, status_code, self.get_mime_type(), self.get_content(status_code))
+                self.send_request(status_code, self.get_mime_type(), self.get_content(status_code))
         
         else:
             status_code = " 404 Error Not Found\r\n"
-            self.send_request(self.proto, status_code, self.get_mime_type(), self.get_content(status_code))
+            self.send_request(status_code, self.get_mime_type(), self.get_content(status_code))
 
+    # Get the mime type
     def get_mime_type(self):
         _, ext = os.path.splitext(self.file)
 
@@ -98,9 +98,14 @@ class MyWebServer(socketserver.BaseRequestHandler):
         else:
             return "Content-Type: text/html\r\n"
 
+    # Construct the corresponding HTML given a status code
     def get_content(self, status_code):
         if status_code == " 301 Moved Permanently":
-            contents = "hello"
+            contents = "<html> <head> \r\n" + \
+                    "<title>301 Moved Permanently</title> \r\n" + \
+                    "</head><body> \r\n" + \
+                    "<h1>301 Moved Permanently</h1>\r\n" + \
+                    "</body></html>\r\n"
             return contents
         elif status_code == " 404 Error Not Found\r\n":
             contents = "<html> <head> \r\n" + \
@@ -115,10 +120,11 @@ class MyWebServer(socketserver.BaseRequestHandler):
                     "</head><body> \r\n" + \
                     "<h1>405 Method Not Allowed</h1>\r\n" + \
                     "</body></html>\r\n"
-            return
-            
-    def send_request(self, proto, status_code, mime_type, content):
-        response = proto + status_code + mime_type + "\r\n" + content
+            return contents
+
+    # Construct and send the request        
+    def send_request(self, status_code, mime_type, content):
+        response = self.proto + status_code + mime_type + "\r\n" + content
         self.request.sendall(response.encode())
 
 if __name__ == "__main__":
