@@ -25,6 +25,12 @@ Collaborators
 * Fangting Chen - Discussed 301 errors
 * Mohamad Jamaleddine - Discussed parsing received data
 
+Resources
+
+* https://stackoverflow.com/questions/82831/how-do-i-check-whether-a-file-exists-without-exceptions
+* https://www.systutorials.com/241539/how-to-get-the-file-extension-from-a-filename-in-python/
+* https://www.tutorialspoint.com/http/http_responses.htm
+
 But the server.py example is derived from the python documentation
 examples thus some of the code is Copyright © 2001-2013 Python
 Software Foundation; All Rights Reserved under the PSF license (GPL
